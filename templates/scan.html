@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    /* Remove body-level centering to avoid affecting sidebar and navbar */
+    body {
+        background-color: #0d0d0d !important;
+        color: white !important;
+    }
+
+    /* Wrapper to center the scanner container within the content area */
+    .scanner-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 60px); /* Adjust for navbar height */
+    }
+
+    /* Container for the scanning area */
+    .scanner-container {
+        background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+        border: 1px solid #333;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        text-align: center;
+        max-width: 400px;
+        width: 100%;
+    }
+
+    /* Instruction text */
+    .scanner-instruction {
+        font-size: 1.2rem;
+        color: #ddd;
+        margin-bottom: 20px;
+    }
+
+    /* Card icon container */
+    .card-icon {
+        font-size: 50px;
+        color: #007bff;
+        margin-bottom: 20px;
+        animation: pulse 2s infinite;
+    }
+
+    /* Pulse animation for card icon */
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.7; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Spinner for scanning */
+    .scanner-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #007bff;
+        border-top: 3px solid transparent;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        vertical-align: middle;
+        margin-left: 10px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Scanning text */
+    .scanner-text {
+        font-size: 1rem;
+        color: #aaa;
+    }
+
+    /* Feedback message */
+    .scanner-feedback {
+        margin-top: 20px;
+        padding: 10px;
+        border-radius: 5px;
+        display: none;
+    }
+    .scanner-feedback.success {
+        background-color: #28a745;
+        color: white;
+    }
+    .scanner-feedback.error {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    /* Invisible input for scanner */
+    .scanner-input {
+        position: absolute;
+        opacity: 0;
+        width: 1px;
+        height: 1px;
+        top: -9999px;
+        left: -9999px;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const input = document.querySelector('#scanner-input');
+        const feedback = document.querySelector('#scanner-feedback');
+
+        // Auto-focus the input field on page load
+        input.focus();
+
+        // Keep the input focused even if the user clicks elsewhere
+        document.addEventListener('click', () => {
+            input.focus();
+        });
+
+        // Detect Enter keypress to submit the scanned data
+        input.addEventListener('keydown', async (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const cardId = input.value.trim();
+
+                if (!cardId) {
+                    showFeedback('error', 'No card data detected.');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/scan', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams({
+                            'card_id': cardId
+                        })
+                    });
+
+                    const data = await response.json();
+                    showFeedback(data.status, data.message);
+                    input.value = ''; // Clear the input after scanning
+                    input.focus(); // Refocus the input for the next scan
+                } catch (error) {
+                    showFeedback('error', 'An error occurred while scanning.');
+                    console.error('Scan error:', error);
+                    input.value = ''; // Clear the input on error
+                    input.focus(); // Refocus the input
+                }
+            }
+        });
+
+        // Function to show feedback messages
+        function showFeedback(type, message) {
+            feedback.className = `scanner-feedback ${type}`;
+            feedback.textContent = message;
+            feedback.style.display = 'block';
+            // Hide feedback after 3 seconds
+            setTimeout(() => {
+                feedback.style.display = 'none';
+            }, 3000);
+        }
+    });
+</script>
+{% endblock %}
+
+{% block title %}Scan NFC{% endblock %}
+
+{% block content %}
+<div class="scanner-wrapper">
+    <div class="scanner-container">
+        <span class="mdi mdi-card-account-details-outline card-icon"></span>
+        <h2 class="scanner-instruction">Place your magnetic strip card near the scanner to record your attendance.</h2>
+        <div class="scanner-text">
+            Scanning...
+            <span class="scanner-spinner"></span>
+        </div>
+        <input type="text" id="scanner-input" class="scanner-input" autocomplete="off">
+        <div id="scanner-feedback" class="scanner-feedback"></div>
+    </div>
+</div>
+{% endblock %}

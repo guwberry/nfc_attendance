@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    /* Ensure the entire page supports dark mode */
+    body {
+        background-color: #0d0d0d !important;
+        color: white !important;
+    }
+
+    /* Card styling */
+    .card {
+        background-color: #1a1a1a !important; /* Dark background */
+        color: white !important; /* White text */
+        border: 1px solid #333 !important; /* Subtle border */
+        border-radius: 8px !important;
+    }
+    .card-header {
+        background-color: #2a2a2a !important; /* Slightly lighter dark shade */
+        color: white !important; /* White text */
+        border-bottom: 1px solid #333 !important;
+        padding: 15px 20px !important;
+    }
+    .card-title {
+        font-size: 1.25rem !important;
+        margin-bottom: 5px !important;
+        color: white !important;
+    }
+    .card-body {
+        padding: 20px !important;
+    }
+
+    /* Stats cards styling */
+    .stats-card {
+        background-color: #1a1a1a !important; /* Dark background */
+        color: white !important; /* White text */
+        border: 1px solid #333 !important; /* Subtle border */
+        border-radius: 8px !important;
+        padding: 20px !important;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+    }
+    .stats-card-title {
+        font-size: 1rem !important;
+        color: #aaa !important; /* Light gray for title */
+        margin-bottom: 10px !important;
+    }
+    .stats-card-value {
+        font-size: 1.75rem !important;
+        font-weight: bold !important;
+    }
+    .stats-card-icon {
+        font-size: 2rem !important;
+    }
+    .text-primary { color: #007bff !important; }
+    .text-success { color: #28a745 !important; }
+
+    /* Chart container styling */
+    .chart-container {
+        position: relative;
+        margin: auto;
+        width: 100%;
+    }
+    /* Specific styling for daily attendance chart */
+    #dailyAttendanceChartContainer {
+        height: 300px;
+    }
+    /* Specific styling for teacher attendance chart (scrollable) */
+    #teacherAttendanceChartContainer {
+        height: 300px; /* Fixed height to allow scrolling if needed */
+        overflow-y: auto; /* Enable vertical scrolling */
+        overflow-x: hidden; /* Prevent horizontal scrolling */
+    }
+</style>
+{% endblock %}
+
+{% block title %}Statistics{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card bg-dark text-white">
+        <div class="card-header bg-dark text-white">
+            <h4 class="card-title text-white">Attendance Statistics</h4>
+        </div>
+        <div class="card-body">
+            <!-- Stats Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="stats-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="stats-card-title">Today's Attendance</div>
+                                <div class="stats-card-value">{{ today_count }}</div>
+                            </div>
+                            <div class="stats-card-icon">
+                                <span class="mdi mdi-account-check text-primary"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="stats-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="stats-card-title">Total Records</div>
+                                <div class="stats-card-value">{{ total_records }}</div>
+                            </div>
+                            <div class="stats-card-icon">
+                                <span class="mdi mdi-database text-success"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="row">
+                <!-- Daily Attendance Line Chart -->
+                <div class="col-md-6 mb-4">
+                    <div class="card bg-dark text-white">
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="card-title text-white">Daily Attendance (Last 7 Days)</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container" id="dailyAttendanceChartContainer">
+                                <canvas id="dailyAttendanceChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Teacher Attendance Horizontal Bar Chart (Bottom 10) -->
+                <div class="col-md-6 mb-4">
+                    <div class="card bg-dark text-white">
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="card-title text-white">Bottom 10 Teachers by Attendance (Last 7 Days)</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container" id="teacherAttendanceChartContainer">
+                                <canvas id="teacherAttendanceChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Daily Attendance Line Chart
+const dailyCtx = document.getElementById('dailyAttendanceChart').getContext('2d');
+const dailyAttendanceChart = new Chart(dailyCtx, {
+    type: 'line',
+    data: {
+        labels: {{ daily_labels | tojson }},
+        datasets: [{
+            label: 'Unique Teachers',
+            data: {{ daily_counts | tojson }},
+            borderColor: '#007bff',
+            backgroundColor: 'rgba(0, 123, 255, 0.1)',
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#007bff',
+            pointBorderColor: '#fff',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: '#007bff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: {
+                ticks: { color: 'white' },
+                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+            },
+            y: {
+                beginAtZero: true,
+                ticks: { color: 'white', stepSize: 1 },
+                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+            }
+        },
+        plugins: {
+            legend: {
+                labels: { color: 'white' }
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                titleColor: 'white',
+                bodyColor: 'white'
+            }
+        }
+    }
+});
+
+// Teacher Attendance Horizontal Bar Chart (Bottom 10)
+const teacherLabels = {{ teacher_labels | tojson }};
+const teacherCounts = {{ teacher_counts | tojson }};
+
+// Take the bottom 10 teachers (already sorted by least attendance in app.py)
+const bottomN = 10;
+const bottomLabels = teacherLabels.slice(0, bottomN);
+const bottomCounts = teacherCounts.slice(0, bottomN);
+
+const teacherCtx = document.getElementById('teacherAttendanceChart').getContext('2d');
+const teacherAttendanceChart = new Chart(teacherCtx, {
+    type: 'bar',
+    data: {
+        labels: bottomLabels,
+        datasets: [{
+            label: 'Days Present',
+            data: bottomCounts,
+            backgroundColor: '#ff4444', // Red to indicate low attendance
+            borderColor: '#ff4444',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        indexAxis: 'y', // Makes the bar chart horizontal
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: {
+                ticks: { color: 'white' },
+                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                title: {
+                    display: true,
+                    text: 'Days Present',
+                    color: 'white'
+                }
+            },
+            y: {
+                ticks: { 
+                    color: 'white',
+                    autoSkip: false // Ensure all labels are shown
+                },
+                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+            }
+        },
+        plugins: {
+            legend: {
+                labels: { color: 'white' }
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                titleColor: 'white',
+                bodyColor: 'white',
+                callbacks: {
+                    label: function(context) {
+                        return `Days Present: ${context.parsed.x}`;
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

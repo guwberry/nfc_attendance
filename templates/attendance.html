@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    /* Ensure the entire page supports dark mode */
+    body {
+        background-color: #0d0d0d !important;
+        color: white !important;
+    }
+
+    /* Ensure the overall content area supports dark mode */
+    .content-header, .content-title, .content-subtitle {
+        color: white !important;
+    }
+
+    /* Card styles for dark mode */
+    .card {
+        background-color: #1a1a1a !important; /* Dark background */
+        color: white !important; /* White text */
+        border: 1px solid #333 !important; /* Subtle border for contrast */
+    }
+
+    /* Card header for dark mode */
+    .card-header {
+        background-color: #2a2a2a !important; /* Slightly lighter dark shade */
+        color: white !important; /* White text */
+        border-bottom: 1px solid #333 !important;
+    }
+
+    /* Card title and subtitle */
+    .card-title, .card-subtitle {
+        color: white !important;
+    }
+
+    /* Form inputs for dark mode */
+    .form-control, .form-select {
+        background-color: #333 !important; /* Dark input background */
+        color: white !important; /* White text */
+        border-color: #555 !important; /* Slightly lighter border */
+    }
+    .form-control:focus, .form-select:focus {
+        background-color: #333 !important;
+        color: white !important;
+        border-color: #007bff !important; /* Highlight on focus */
+        box-shadow: none !important;
+    }
+    /* Placeholder text for inputs */
+    .form-control::placeholder, .form-select::placeholder {
+        color: #aaa !important; /* Light gray for visibility */
+        opacity: 1 !important;
+    }
+    .form-label {
+        color: white !important; /* White labels */
+    }
+
+    /* Table styles for dark mode */
+    .table {
+        color: white !important; /* White text */
+        background-color: #1a1a1a !important; /* Dark table background */
+    }
+    .table thead {
+        background-color: #2a2a2a !important; /* Darker header */
+        color: white !important; /* White header text */
+        border-bottom: 1px solid #444 !important;
+    }
+    .table th {
+        background-color: #2a2a2a !important; /* Ensure th matches thead */
+        color: white !important;
+        border-bottom: 1px solid #444 !important;
+    }
+    .table tbody {
+        background-color: #1a1a1a !important; /* Dark background for table body */
+    }
+    .table td {
+        background-color: #1a1a1a !important; /* Dark background for table cells */
+        color: white !important; /* White text */
+        border-top: 1px solid #444 !important; /* Subtle row borders */
+    }
+    .table tbody tr:hover {
+        background-color: #333 !important; /* Hover effect */
+    }
+    /* Add divider between Clock In and Clock Out */
+    .table th:nth-child(4),
+    .table td:nth-child(4) {
+        border-right: 2px solid #444 !important; /* Vertical divider */
+    }
+
+    /* Alert styles for dark mode */
+    .alert {
+        background-color: #333 !important; /* Dark alert background */
+        color: white !important; /* White text */
+        border: 1px solid #555 !important;
+    }
+
+    /* Ensure the button matches the screenshot */
+    .btn-primary {
+        background-color: #007bff !important;
+        border-color: #007bff !important;
+        color: white !important;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3 !important;
+        border-color: #0056b3 !important;
+    }
+</style>
+{% endblock %}
+
+{% block title %}Attendance Records{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">Attendance Records</h1>
+    <p class="content-subtitle">View and export attendance records</p>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h2 class="card-title">Export Attendance Data</h2>
+        <p class="card-subtitle">Export attendance records to Excel</p>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('export_excel') }}" class="row g-3">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-control" id="date" name="selected_date" required>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label class="form-label">Class</label>
+                    <select class="form-select" id="class" name="selected_class" required>
+                        <option value="" disabled selected>Select a class</option>
+                        {% for teacher in teachers %}
+                            {% if teacher.class %}
+                                <option value="{{ teacher.class }}">{{ teacher.class }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <span class="mdi mdi-microsoft-excel me-2"></span>
+                    Export to Excel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Daily Records</h2>
+        <p class="card-subtitle">Today's attendance records</p>
+    </div>
+    <div class="card-body">
+        {% if clock_in_out_records %}
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th colspan="4">Clock In</th>
+                        <th colspan="4">Clock Out</th>
+                    </tr>
+                    <tr>
+                        <th>Teacher</th>
+                        <th>Class</th>
+                        <th>Date</th>
+                        <th>Scan Time</th>
+                        <th>Teacher</th>
+                        <th>Class</th>
+                        <th>Date</th>
+                        <th>Scan Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for date, records in clock_in_out_records.items() %}
+                        {% set max_rows = [records.clock_in|length, records.clock_out|length]|max %}
+                        {% for i in range(max_rows) %}
+                        <tr>
+                            <!-- Clock In Columns -->
+                            {% if i < records.clock_in|length %}
+                                <td>{{ records.clock_in[i].name }}</td>
+                                <td>{{ records.clock_in[i].class }}</td>
+                                <td>{{ records.clock_in[i].date }}</td>
+                                <td>{{ records.clock_in[i].scan_time }}</td>
+                            {% else %}
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            {% endif %}
+                            <!-- Clock Out Columns -->
+                            {% if i < records.clock_out|length %}
+                                <td>{{ records.clock_out[i].name }}</td>
+                                <td>{{ records.clock_out[i].class }}</td>
+                                <td>{{ records.clock_out[i].date }}</td>
+                                <td>{{ records.clock_out[i].scan_time }}</td>
+                            {% else %}
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <span class="mdi mdi-information me-2"></span>
+            No attendance records found for today.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

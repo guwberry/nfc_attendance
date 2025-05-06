@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    /* Ensure the entire page supports dark mode */
+    body {
+        background-color: #0d0d0d !important;
+        color: white !important;
+    }
+
+    /* Ensure the overall content area supports dark mode */
+    .content-header, .content-title, .content-subtitle {
+        color: white !important;
+    }
+
+    /* Card styles for dark mode */
+    .card {
+        background-color: #1a1a1a !important; /* Dark background */
+        color: white !important; /* White text */
+        border: 1px solid #333 !important; /* Subtle border for contrast */
+    }
+
+    /* Card header for dark mode */
+    .card-header {
+        background-color: #2a2a2a !important; /* Slightly lighter dark shade */
+        color: white !important; /* White text */
+        border-bottom: 1px solid #333 !important;
+    }
+
+    /* Card title and subtitle */
+    .card-title, .card-subtitle {
+        color: white !important;
+    }
+
+    /* Table styles for dark mode */
+    .table {
+        color: white !important; /* White text */
+        background-color: #1a1a1a !important; /* Dark table background */
+    }
+    .table thead {
+        background-color: #2a2a2a !important; /* Darker header */
+        color: white !important; /* White header text */
+        border-bottom: 1px solid #444 !important;
+    }
+    .table th {
+        background-color: #2a2a2a !important; /* Ensure th matches thead */
+        color: white !important;
+        border-bottom: 1px solid #444 !important;
+    }
+    .table tbody {
+        background-color: #1a1a1a !important; /* Dark background for table body */
+    }
+    .table td {
+        background-color: #1a1a1a !important; /* Dark background for table cells */
+        color: white !important; /* White text */
+        border-top: 1px solid #444 !important; /* Subtle row borders */
+    }
+    .table tbody tr:hover {
+        background-color: #333 !important; /* Hover effect */
+    }
+
+    /* Status button styles */
+    .status-clock-in {
+        background-color: #28a745 !important; /* Green for CLOCK IN */
+        color: white !important;
+        border: none !important;
+        padding: 2px 8px !important;
+        border-radius: 12px !important;
+        font-size: 12px !important;
+    }
+    .status-clock-out {
+        background-color: #dc3545 !important; /* Red for CLOCK OUT */
+        color: white !important;
+        border: none !important;
+        padding: 2px 8px !important;
+        border-radius: 12px !important;
+        font-size: 12px !important;
+    }
+
+    /* Stat card styles */
+    .stat-card {
+        background-color: #1a1a1a !important;
+        border: 1px solid #333 !important;
+        color: white !important;
+    }
+    .stat-icon {
+        font-size: 24px !important;
+    }
+    .stat-value {
+        font-size: 36px !important;
+        font-weight: bold !important;
+    }
+    .stat-label {
+        font-size: 14px !important;
+        color: #aaa !important;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Function to fetch recent attendance records and update the table
+    function fetchRecentAttendance() {
+        fetch('/recent_attendance')
+            .then(response => response.json())
+            .then(data => {
+                // Get the table body
+                const tbody = document.querySelector('#recent-attendance-table tbody');
+                // Clear existing rows
+                tbody.innerHTML = '';
+
+                // Populate the table with new data
+                data.forEach(record => {
+                    const row = document.createElement('tr');
+                    
+                    // Teacher name cell
+                    const teacherCell = document.createElement('td');
+                    teacherCell.textContent = record.teacher_name;
+                    row.appendChild(teacherCell);
+
+                    // Timestamp cell
+                    const timeCell = document.createElement('td');
+                    timeCell.textContent = record.timestamp;
+                    row.appendChild(timeCell);
+
+                    // Status cell
+                    const statusCell = document.createElement('td');
+                    const statusButton = document.createElement('button');
+                    statusButton.textContent = record.status;
+                    // Apply appropriate class based on status
+                    if (record.status === 'CLOCK IN') {
+                        statusButton.className = 'status-clock-in';
+                    } else if (record.status === 'CLOCK OUT') {
+                        statusButton.className = 'status-clock-out';
+                    }
+                    statusCell.appendChild(statusButton);
+                    row.appendChild(statusCell);
+
+                    tbody.appendChild(row);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching recent attendance:', error);
+            });
+    }
+
+    // Initial fetch when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchRecentAttendance();
+        // Fetch every 10 seconds
+        setInterval(fetchRecentAttendance, 10000);
+    });
+</script>
+{% endblock %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">Welcome to NFC Attendance System</h1>
+    <p class="content-subtitle">Manage your attendance records efficiently with our NFC-based system.</p>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="stat-card p-4 text-center">
+            <span class="mdi mdi-account-group stat-icon text-primary mb-2"></span>
+            <div class="stat-value">{{ total_teachers }}</div>
+            <div class="stat-label">Total Teachers</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card p-4 text-center">
+            <span class="mdi mdi-check-circle stat-icon text-success mb-2"></span>
+            <div class="stat-value">{{ today_attendance }}</div>
+            <div class="stat-label">Today's Attendance</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card p-4 text-center">
+            <span class="mdi mdi-clock-outline stat-icon text-warning mb-2"></span>
+            <div class="stat-value">{{ pending_scans }}</div>
+            <div class="stat-label">Pending Scans</div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="stat-card p-4 text-center">
+            <span class="mdi mdi-database stat-icon text-info mb-2"></span>
+            <div class="stat-value">{{ total_records }}</div>
+            <div class="stat-label">Total Records</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Recent Attendance</h2>
+        <p class="card-subtitle">Latest attendance records</p>
+    </div>
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table" id="recent-attendance-table">
+                <thead>
+                    <tr>
+                        <th>Teacher</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Table body will be populated dynamically by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </tbody>
+</table>
+</div>
+</div>
+</div>
+{% endblock %}

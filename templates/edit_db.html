@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Database{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">Edit Database</h1>
+    <p class="content-subtitle">Manage teachers in the database</p>
+</div>
+
+<!-- Add Teacher Form -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h2 class="card-title">Add New Teacher</h2>
+        <p class="card-subtitle">Add a new teacher to the database</p>
+    </div>
+    <div class="card-body">
+        <form method="POST" class="row g-3">
+            <input type="hidden" name="action" value="add">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label class="form-label">Name</label>
+                    <input type="text" class="form-control" name="name" required>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label class="form-label">Class</label>
+                    <input type="text" class="form-control" name="class" required>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label class="form-label">Card ID</label>
+                    <input type="text" class="form-control" name="card_id" required>
+                </div>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <span class="mdi mdi-plus me-2"></span>
+                    Add Teacher
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Bulk Import Teachers Form -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h2 class="card-title">Bulk Import Teachers</h2>
+        <p class="content-subtitle">Import all teachers from the predefined list</p>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <input type="hidden" name="action" value="bulk_import">
+            <button type="submit" class="btn btn-primary">
+                <span class="mdi mdi-import me-2"></span>
+                Import Teachers
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Update Teacher Form -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h2 class="card-title">Update Teacher</h2>
+        <p class="content-subtitle">Update an existing teacher's details</p>
+    </div>
+    <div class="card-body">
+        <form method="POST" class="row g-3">
+            <input type="hidden" name="action" value="update">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label class="form-label">Select Teacher</label>
+                    <select class="form-control" name="teacher_id" required>
+                        <option value="">Select a teacher</option>
+                        {% for teacher in teachers %}
+                        <option value="{{ teacher.id }}">{{ teacher.name }} ({{ teacher.class }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label class="form-label">Name (optional)</label>
+                    <input type="text" class="form-control" name="name" placeholder="Leave blank to keep unchanged">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label class="form-label">Class (optional)</label>
+                    <input type="text" class="form-control" name="class" placeholder="Leave blank to keep unchanged">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label class="form-label">Card ID (optional)</label>
+                    <input type="text" class="form-control" name="card_id" placeholder="Leave blank to keep unchanged">
+                </div>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <span class="mdi mdi-update me-2"></span>
+                    Update Teacher
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Teacher Form -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h2 class="card-title">Delete Teacher</h2>
+        <p class="content-subtitle">Delete a teacher from the database</p>
+    </div>
+    <div class="card-body">
+        <form method="POST" class="row g-3">
+            <input type="hidden" name="action" value="delete">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label class="form-label">Select Teacher</label>
+                    <select class="form-control" name="teacher_id" required>
+                        <option value="">Select a teacher</option>
+                        {% for teacher in teachers %}
+                        <option value="{{ teacher.id }}">{{ teacher.name }} ({{ teacher.class }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-danger">
+                    <span class="mdi mdi-delete me-2"></span>
+                    Delete Teacher
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Teachers List -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Teachers List</h2>
+        <p class="content-subtitle">List of all teachers in the database</p>
+    </div>
+    <div class="card-body">
+        {% if teachers %}
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Class</th>
+                        <th>Card ID</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for teacher in teachers %}
+                    <tr>
+                        <td>{{ teacher.id }}</td>
+                        <td>{{ teacher.name }}</td>
+                        <td>{{ teacher.class }}</td>
+                        <td>{{ teacher.card_id }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <span class="mdi mdi-information me-2"></span>
+            No teachers found in the database.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

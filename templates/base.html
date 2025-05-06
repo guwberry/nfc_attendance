@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>{% block title %}{% endblock %} - NFC Attendance System</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Material Design Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="{{ url_for('index') }}" class="navbar-brand">NFC Attendance</a>
+            <button class="btn btn-icon d-lg-none" id="sidebarClose">
+                <span class="mdi mdi-close"></span>
+            </button>
+        </div>
+        <nav class="sidebar-nav">
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="{{ url_for('index') }}" class="sidebar-link {% if request.endpoint == 'index' %}active{% endif %}">
+                        <span class="mdi mdi-view-dashboard"></span>
+                        Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('scan') }}" class="sidebar-link {% if request.endpoint == 'scan' %}active{% endif %}">
+                        <span class="mdi mdi-contactless-payment"></span>
+                        Scan NFC
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('attendance') }}" class="sidebar-link {% if request.endpoint == 'attendance' %}active{% endif %}">
+                        <span class="mdi mdi-clipboard-text-clock"></span>
+                        Attendance
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('statistics') }}" class="sidebar-link {% if request.endpoint == 'statistics' %}active{% endif %}">
+                        <span class="mdi mdi-chart-bar"></span>
+                        Statistics
+                    </a>
+                </li>
+                {% if 'username' in session and session['username'] == 'tatbeng' %}
+                <li class="nav-item">
+                    <a href="{{ url_for('edit_db') }}" class="sidebar-link {% if request.endpoint == 'edit_db' %}active{% endif %}">
+                        <span class="mdi mdi-database-edit"></span>
+                        Database
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+
+    <div class="navbar">
+        <div class="container-fluid">
+            <button class="btn btn-icon d-lg-none" id="sidebarToggle">
+                <span class="mdi mdi-menu"></span>
+            </button>
+            <div class="navbar-brand d-none d-lg-block">NFC Attendance System</div>
+            <div class="nav-right">
+                {% if 'username' in session %}
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                        <span class="mdi mdi-account"></span>
+                        {{ session['username'] }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li class="dropdown-header">Administrator</li>
+                        <li><a class="dropdown-item" href="{{ url_for('logout') }}">
+                            <span class="mdi mdi-logout"></span> Sign Out
+                        </a></li>
+                    </ul>
+                </div>
+                {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn-primary">
+                    <span class="mdi mdi-login"></span> Login
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sidebar toggle functionality
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarClose = document.getElementById('sidebarClose');
+            
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('show');
+                });
+            }
+            
+            if (sidebarClose) {
+                sidebarClose.addEventListener('click', function() {
+                    sidebar.classList.remove('show');
+                });
+            }
+            
+            // Close sidebar when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!sidebar.contains(event.target) && !sidebarToggle.contains(event.target)) {
+                    sidebar.classList.remove('show');
+                }
+            });
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
