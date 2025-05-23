@@ -14,7 +14,7 @@ from openpyxl.worksheet.dimensions import ColumnDimension
 
 # Flask app setup
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-here'  # Replace with a secure key
+app.secret_key = 'berry'  # Replace with a secure key
 
 # Database path (relative to app.py in web_app directory)
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'attendance.db')
@@ -478,7 +478,12 @@ def export_excel():
         if record['scan_type'] == 'clock_in':
             teacher_attendance[teacher_name]['clock_in'] = formatted_time
         elif record['scan_type'] == 'clock_out':
-            teacher_attendance[teacher_name]['clock_out'] = formatted_time
+            if record['scan_type'] == 'clock_out':  # Normal clock-out
+                teacher_attendance[teacher_name]['clock_out'] = formatted_time
+        elif record['scan_type'] == 'clock_out_auto':
+            teacher_attendance[teacher_name]['clock_out'] = ''  # Leave it blank in Excel
+
+            
 
     # Map Clock In/Out times by matching teacher names (case-insensitive)
     teacher_records = []
@@ -591,7 +596,7 @@ def login():
         password = request.form['password']
         
         # Simple authentication (replace with proper user management in production)
-        if username == 'tatbeng' and password == 'admin':
+        if username == 'tatbeng' and password == 'aee6060':
             session['username'] = username
             flash('Login successful!', 'success')
             return redirect(url_for('index'))
@@ -935,6 +940,41 @@ def recent_attendance():
     conn.close()
     
     return jsonify(recent_attendance)
+
+@app.route('/auto-clockout', methods=['POST'])
+@login_required
+def auto_clockout():
+    """
+    Automatically clock out teachers who have clocked in but not clocked out after 6 PM.
+    """
+    now = datetime.now()
+    if now.time() < time(18, 0):  # Before 6 PM
+        flash('It is not yet 6 PM.', 'warning')
+        return redirect(url_for('index'))
+
+    today = date.today().isoformat()
+    conn = get_db_connection()
+
+    # Find all teachers who clocked in today but haven't clocked out
+    teachers_to_clockout = conn.execute('''
+        SELECT teacher_id FROM attendance
+        WHERE date = ? AND scan_type = 'clock_in'
+        EXCEPT
+        SELECT teacher_id FROM attendance
+        WHERE date = ? AND scan_type = 'clock_out'
+    ''', (today, today)).fetchall()
+
+    for row in teachers_to_clockout:
+        conn.execute('''
+            INSERT INTO attendance (teacher_id, date, scan_time, scan_type)
+            VALUES (?, ?, ?, ?)
+        ''', (row['teacher_id'], today, now.strftime('%H:%M:%S'), 'clock_out_auto'))  # mark as auto
+
+    conn.commit()
+    conn.close()
+    flash('Auto clock-out complete.', 'success')
+    return redirect(url_for('index'))
+
 
 # Wrap the Flask app in WsgiToAsgi for ASGI compatibility with uvicorn
 asgi_app = WsgiToAsgi(app)
