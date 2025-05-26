@@ -261,7 +261,7 @@ teacher_list = [
     {"Bil": "53", "Nama Guru": "NURUL HUSNA BINTI HANAFI", "Catatan": ""},
     {"Bil": "54", "Nama Guru": "OLFFA BINTI SAMAT", "Catatan": ""},
     {"Bil": "55", "Nama Guru": "PRISNIE A/P PRAWING", "Catatan": ""},
-    {"Bil": "56", "Nama Guru": "RAJA NOR ASHIKIN BINTI RAJA YEOP", "Catatan": "CUTI BERSALIN"},
+    {"Bil": "56", "Nama Guru": "RAJA NOR ASHIKIN BINTI RAJA YEOP", "Catatan": ""},
     {"Bil": "57", "Nama Guru": "ROZY BIN AHMAD", "Catatan": ""},
     {"Bil": "58", "Nama Guru": "SANISAH BINTI MAT ALI", "Catatan": ""},
     {"Bil": "59", "Nama Guru": "SHAMINI A/P KAJUNATHAN", "Catatan": ""},
