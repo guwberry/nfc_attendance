@@ -23,9 +23,8 @@ NFC Attendance System is a web-based platform for educational institutions to ma
 
 ### Steps
 1. **Clone the Repository**
-   ```sh
-git clone https://github.com/guwberry/nfc_attendance.git
-cd nfc_attendance
+   ```sh git clone https://github.com/guwberry/nfc_attendance.git
+   cd nfc_attendance ```
 ```
 2. **Set Up Python Environment**
    ```sh
