@@ -69,4 +69,4 @@ uvicorn app:asgi_app --host 0.0.0.0 --port 5000 --reload
 - Uvicorn (for ASGI)
 
 ## License
-*No explicit license file found. Please add a LICENSE file to clarify usage and distribution rights.*
+MIT License
